@@ -1,6 +1,14 @@
-import { env } from '$env/dynamic/public';
+// Определяем API URL на основе окружения
+const getApiBaseUrl = () => {
+  // В production на Render используем фиксированный URL
+  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+    return 'https://evrika-backend.onrender.com/api';
+  }
+  // Локальная разработка
+  return 'http://localhost:3001/api';
+};
 
-const API_BASE_URL = env.EVRIKA_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE_URL = getApiBaseUrl();
 
 export class BaseApi {
   constructor(customFetch = null) {

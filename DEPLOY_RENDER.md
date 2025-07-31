@@ -62,7 +62,10 @@ Render автоматически создаст переменные из `rend
 
 **Для Frontend сервиса:**
 - `NODE_ENV` = `production`
-- `EVRIKA_API_BASE_URL` = `https://evrika-backend.onrender.com/api`
+
+**Примечание:** API URL определяется автоматически на основе hostname:
+- Production (*.onrender.com): `https://evrika-backend.onrender.com/api`
+- Локальная разработка: `http://localhost:3001/api`
 
 ### 3.3 Запуск развертывания
 1. Нажмите "Apply"
@@ -130,7 +133,7 @@ https://evrika-backend.onrender.com/api/metadata/ages
 ### Проблема: CORS ошибки
 **Решение:**
 1. Проверьте `FRONTEND_URL` в backend переменных
-2. Убедитесь, что `EVRIKA_API_BASE_URL` указывает на правильный backend URL
+2. Убедитесь, что backend сервис доступен по адресу `https://evrika-backend.onrender.com/api`
 
 ## 💡 Советы по оптимизации
 

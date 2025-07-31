@@ -26,5 +26,3 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: EVRIKA_API_BASE_URL
-        value: https://evrika-backend.onrender.com/api
