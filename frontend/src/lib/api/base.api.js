@@ -1,6 +1,6 @@
 import { env } from '$env/dynamic/public';
 
-const API_BASE_URL = env.PUBLIC_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE_URL = env.EVRIKA_API_BASE_URL || 'http://localhost:3001/api';
 
 export class BaseApi {
   constructor(customFetch = null) {
