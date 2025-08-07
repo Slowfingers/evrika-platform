@@ -35,7 +35,7 @@ async function startServer() {
     // Базовый маршрут
     app.get('/', (req, res) => {
       res.json({ 
-        message: 'Evrika Backend API', 
+        message: 'EvrikaEdu Backend API', 
         version: '1.0.0',
         endpoints: {
           auth: '/api/auth',
@@ -47,7 +47,7 @@ async function startServer() {
     
     // Запуск сервера
     app.listen(PORT, () => {
-      console.log(`🚀 Evrika Backend запущен на порту ${PORT}`);
+      console.log(`🚀 EvrikaEdu Backend запущен на порту ${PORT}`);
       console.log(`📊 API доступен по адресу: http://localhost:${PORT}`);
     });
   } catch (error) {

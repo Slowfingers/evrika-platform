@@ -19,8 +19,15 @@
     grade: '',
     topic: '',
     description: '',
+    goals: '',
     selectedCards: [],
-    totalTime: 0
+    totalTime: 0,
+    lessonStages: {
+      'начало-урока': { cards: [], totalTime: 0 },
+      'объяснение-нового-материала': { cards: [], totalTime: 0 },
+      'закрепление': { cards: [], totalTime: 0 },
+      'конец-урока': { cards: [], totalTime: 0 }
+    }
   };
 
   // Каталог карточек
@@ -29,6 +36,17 @@
 
   // Поиск и фильтрация
   let searchQuery = '';
+  
+  // Текущий выбранный этап урока для добавления карточек
+  let currentLessonStage = 'начало-урока';
+  
+  // Названия этапов урока для отображения
+  const lessonStageNames = {
+    'начало-урока': 'Начало урока',
+    'объяснение-нового-материала': 'Объяснение нового материала',
+    'закрепление': 'Закрепление',
+    'конец-урока': 'Конец урока'
+  };
   let timeFilter = 'all'; // all, short (до 15 мин), medium (15-30 мин), long (30+ мин)
   let selectedAgeGroups = [];
   let selectedSkills = [];
@@ -36,6 +54,9 @@
   let selectedTypes = [];
   let showFilters = false;
   let filteredCards = [];
+  
+  // Управление этапами урока на втором шаге
+  let showStageCards = {}; // Для отображения карточек каждого этапа
   
   // Предопределенные данные для фильтров (как в каталоге)
   const predefinedAgeGroups = [
@@ -169,24 +190,55 @@
 
   // Работа с карточками
   function addCard(card) {
-    if (lessonData.selectedCards.find(c => c.id === card.id)) {
-      return; // Карточка уже добавлена
-    }
-
-    // Поддерживаем оба формата времени: timeMinutes (camelCase) и time_minutes (snake_case)
     const cardTime = card.timeMinutes || card.time_minutes || 0;
-    const newTotalTime = lessonData.totalTime + cardTime;
     
-    if (newTotalTime > 45) {
-      alert('⚠️ Превышен лимит времени урока (45 минут)! Текущее время: ' + newTotalTime + ' минут.');
+    // Проверяем, не добавлена ли уже карточка в текущий этап
+    const isAlreadyInCurrentStage = lessonData.lessonStages[currentLessonStage].cards.some(c => c.id === card.id);
+    if (isAlreadyInCurrentStage) {
+      alert('Эта карточка уже добавлена в данный этап урока');
       return;
     }
-
+    
+    // Проверяем общий лимит времени
+    if (lessonData.totalTime + cardTime > 45) {
+      alert('Превышен лимит времени урока (45 минут)');
+      return;
+    }
+    
+    // Добавляем карточку к текущему этапу урока
+    lessonData.lessonStages[currentLessonStage].cards = [...lessonData.lessonStages[currentLessonStage].cards, card];
+    lessonData.lessonStages[currentLessonStage].totalTime += cardTime;
+    
+    // Обновляем общие данные (добавляем карточку в общий список, даже если она уже есть в других этапах)
     lessonData.selectedCards = [...lessonData.selectedCards, card];
+    lessonData.totalTime += cardTime;
   }
 
-  function removeCard(cardId) {
+  function removeCard(cardId, stageId = null) {
+    // Находим карточку для получения времени
+    const cardToRemove = lessonData.selectedCards.find(card => card.id === cardId);
+    if (!cardToRemove) return;
+    
+    const cardTime = cardToRemove.timeMinutes || cardToRemove.time_minutes || 0;
+    
+    // Если указан этап, удаляем из конкретного этапа
+    if (stageId && lessonData.lessonStages[stageId]) {
+      lessonData.lessonStages[stageId].cards = lessonData.lessonStages[stageId].cards.filter(card => card.id !== cardId);
+      lessonData.lessonStages[stageId].totalTime -= cardTime;
+    } else {
+      // Иначе ищем во всех этапах
+      Object.keys(lessonData.lessonStages).forEach(stage => {
+        const cardIndex = lessonData.lessonStages[stage].cards.findIndex(card => card.id === cardId);
+        if (cardIndex !== -1) {
+          lessonData.lessonStages[stage].cards.splice(cardIndex, 1);
+          lessonData.lessonStages[stage].totalTime -= cardTime;
+        }
+      });
+    }
+    
+    // Обновляем общие данные
     lessonData.selectedCards = lessonData.selectedCards.filter(card => card.id !== cardId);
+    lessonData.totalTime -= cardTime;
   }
 
   // Экспорт PDF
@@ -300,11 +352,22 @@
           </div>
 
           <div class="form-group">
+            <label for="goals">🎯 Цели урока</label>
+            <textarea 
+              id="goals"
+              bind:value={lessonData.goals}
+              placeholder="Например: развить навыки критического мышления, закрепить знания по теме..."
+              class="form-textarea"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
             <label for="description">📝 Описание урока (необязательно)</label>
             <textarea 
               id="description"
               bind:value={lessonData.description}
-              placeholder="Краткое описание целей и задач урока..."
+              placeholder="Краткое описание хода урока..."
               class="form-textarea"
               rows="3"
             ></textarea>
@@ -328,14 +391,52 @@
     {:else if currentStep === 2}
       <div class="step-container" transition:slide={{ duration: 300, easing: quintOut }}>
         <div class="step-header">
-          <h1>🎲 Выбор приёмов</h1>
-          <p>Добавьте приёмы для вашего урока</p>
+          <h1>🎲 Выбор приёмов по этапам урока</h1>
+          <p>Добавьте приёмы для каждого этапа урока</p>
           <div class="time-indicator">
             <span class="time-current">{lessonData.totalTime} мин</span>
             <span class="time-separator">/</span>
             <span class="time-limit">45 мин</span>
           </div>
         </div>
+
+        <!-- Навигация по этапам урока -->
+        <div class="lesson-stages-nav">
+          {#each Object.keys(lessonData.lessonStages) as stageId}
+            <button 
+              class="stage-nav-btn {currentLessonStage === stageId ? 'active' : ''}"
+              on:click={() => currentLessonStage = stageId}
+            >
+              <span class="stage-name">{lessonStageNames[stageId]}</span>
+              <span class="stage-info">
+                {lessonData.lessonStages[stageId].cards.length} приёмов, 
+                {lessonData.lessonStages[stageId].totalTime} мин
+              </span>
+            </button>
+          {/each}
+        </div>
+
+        <!-- Выбранные карточки текущего этапа -->
+        {#if lessonData.lessonStages[currentLessonStage].cards.length > 0}
+          <div class="selected-stage-cards">
+            <h3>Приёмы этапа "{lessonStageNames[currentLessonStage]}":</h3>
+            <div class="stage-cards-list">
+              {#each lessonData.lessonStages[currentLessonStage].cards as card}
+                <div class="stage-card-item">
+                  <span class="card-title">{card.title}</span>
+                  <span class="card-time">{formatTimeDisplay(card.timeMinutes || card.time_minutes)}</span>
+                  <button 
+                    class="remove-card-btn"
+                    on:click={() => removeCard(card.id, currentLessonStage)}
+                    title="Удалить приём"
+                  >
+                    ✕
+                  </button>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
 
         <div class="catalog-section">
           <div class="search-container">
@@ -483,9 +584,9 @@
               {#each filteredCards as card (card.id)}
                 <ConstructorCard 
                   {card} 
-                  isSelected={lessonData.selectedCards.some(c => c.id === card.id)}
+                  isSelected={lessonData.lessonStages[currentLessonStage].cards.some(c => c.id === card.id)}
                   on:add={() => addCard(card)}
-                  on:remove={() => removeCard(card.id)}
+                  on:remove={() => removeCard(card.id, currentLessonStage)}
                 />
               {/each}
             </div>
@@ -541,16 +642,27 @@
         </div>
 
         <div class="lesson-plan">
-          <h3>План урока:</h3>
-          <div class="lesson-cards">
-            {#each lessonData.selectedCards as card, index (card.id)}
-              <DetailedLessonCard 
-                {card} 
-                {index}
-                on:remove={() => removeCard(card.id)}
-              />
-            {/each}
-          </div>
+          <h3>План урока по этапам:</h3>
+          
+          {#each Object.keys(lessonData.lessonStages) as stageId}
+            {#if lessonData.lessonStages[stageId].cards.length > 0}
+              <div class="lesson-stage-section">
+                <h4 class="stage-title">
+                  {lessonStageNames[stageId]} 
+                  <span class="stage-time">({lessonData.lessonStages[stageId].totalTime} мин)</span>
+                </h4>
+                <div class="lesson-cards">
+                  {#each lessonData.lessonStages[stageId].cards as card, index (`${stageId}-${card.id}-${index}`)}
+                    <DetailedLessonCard 
+                      {card} 
+                      index={index + 1}
+                      on:remove={() => removeCard(card.id, stageId)}
+                    />
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          {/each}
         </div>
 
         <div class="step-actions">
@@ -735,6 +847,124 @@
   .form-textarea {
     resize: vertical;
     min-height: 80px;
+  }
+
+  /* Навигация по этапам урока */
+  .lesson-stages-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .stage-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+  }
+
+  .stage-nav-btn:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  }
+
+  .stage-nav-btn.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  }
+
+  .stage-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+  }
+
+  .stage-info {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    line-height: 1.2;
+  }
+
+  /* Выбранные карточки этапа */
+  .selected-stage-cards {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f0f9ff;
+    border-radius: 1rem;
+    border: 1px solid #0ea5e9;
+  }
+
+  .selected-stage-cards h3 {
+    margin: 0 0 1rem 0;
+    color: #0c4a6e;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .stage-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .stage-card-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid #bae6fd;
+  }
+
+  .card-title {
+    font-weight: 500;
+    color: #0c4a6e;
+    flex: 1;
+  }
+
+  .card-time {
+    font-size: 0.875rem;
+    color: #0369a1;
+    margin: 0 1rem;
+    font-weight: 500;
+  }
+
+  .remove-card-btn {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #dc2626;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+  }
+
+  .remove-card-btn:hover {
+    background: #fecaca;
+    border-color: #f87171;
+    transform: scale(1.1);
   }
 
   /* Каталог */
@@ -1222,6 +1452,33 @@
     color: #1e293b;
     margin-bottom: 1rem;
     text-align: center;
+  }
+
+  .lesson-stage-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .stage-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .stage-time {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
   }
 
   .lesson-cards {

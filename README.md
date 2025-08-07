@@ -1,6 +1,6 @@
-# Evrika Platform - Clean Version
+# EvrikaEdu Platform - Clean Version
 
-Чистая версия платформы Evrika с минималистичной архитектурой.
+Чистая версия платформы EvrikaEdu с минималистичной архитектурой.
 
 ## Структура проекта
 

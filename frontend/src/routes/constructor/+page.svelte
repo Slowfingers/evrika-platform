@@ -48,8 +48,8 @@
 </script>
 
 <svelte:head>
-  <title>Конструктор урока - Evrika</title>
-  <meta name="description" content="Создайте план урока с помощью конструктора Evrika" />
+  <title>Конструктор урока - EvrikaEdu</title>
+  <meta name="description" content="Создайте план урока с помощью конструктора EvrikaEdu" />
 </svelte:head>
 
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">

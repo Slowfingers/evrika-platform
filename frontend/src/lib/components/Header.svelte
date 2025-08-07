@@ -35,7 +35,7 @@
             </svg>
           </div>
           <span class="text-2xl font-bold heading-gradient">
-            Evrika
+            EvrikaEdu
           </span>
         </a>
         

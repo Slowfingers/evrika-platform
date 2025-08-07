@@ -44,7 +44,7 @@
 </script>
 
 <svelte:head>
-  <title>Регистрация - Evrika Platform</title>
+  <title>Регистрация - EvrikaEdu Platform</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -57,7 +57,7 @@
         </svg>
       </div>
       <h1 class="text-3xl font-bold heading-gradient mb-2">Присоединяйтесь!</h1>
-      <p class="text-secondary-600">Создайте новый аккаунт Evrika Platform</p>
+      <p class="text-secondary-600">Создайте новый аккаунт EvrikaEdu Platform</p>
     </div>
 
     <!-- Форма регистрации -->

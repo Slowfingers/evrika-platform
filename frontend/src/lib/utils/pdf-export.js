@@ -215,7 +215,7 @@ function createPrintableContent(lessonData) {
   return `
     <div class="header">
       <h1>План урока</h1>
-      <p style="margin: 0; color: #6b7280;">Создано с помощью платформы Evrika</p>
+      <p style="margin: 0; color: #6b7280;">Создано с помощью платформы EvrikaEdu</p>
     </div>
 
     <div class="lesson-info">

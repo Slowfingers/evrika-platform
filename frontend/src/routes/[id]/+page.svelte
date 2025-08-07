@@ -6,7 +6,7 @@
   const { card } = data;
   
   // Заголовок страницы
-  const title = `${card.title} | Evrika Platform`;
+  const title = `${card.title} | EvrikaEdu Platform`;
   
   onMount(() => {
     document.title = title;

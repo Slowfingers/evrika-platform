@@ -185,7 +185,7 @@
 </script>
 
 <svelte:head>
-  <title>Каталог педагогических приемов - Evrika Platform</title>
+  <title>Каталог педагогических приемов - EvrikaEdu Platform</title>
 </svelte:head>
 
 <div class="max-w-7xl mx-auto">

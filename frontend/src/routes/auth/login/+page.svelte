@@ -28,7 +28,7 @@
 </script>
 
 <svelte:head>
-  <title>Вход - Evrika Platform</title>
+  <title>Вход - EvrikaEdu Platform</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -41,7 +41,7 @@
         </svg>
       </div>
       <h1 class="text-3xl font-bold heading-gradient mb-2">Добро пожаловать!</h1>
-      <p class="text-secondary-600">Войдите в свой аккаунт Evrika Platform</p>
+      <p class="text-secondary-600">Войдите в свой аккаунт EvrikaEdu Platform</p>
     </div>
 
     <!-- Форма входа -->

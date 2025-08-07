@@ -65,7 +65,7 @@
 </script>
 
 <svelte:head>
-  <title>Админ-панель - Evrika Platform</title>
+  <title>Админ-панель - EvrikaEdu Platform</title>
 </svelte:head>
 
 <div class="space-y-6">

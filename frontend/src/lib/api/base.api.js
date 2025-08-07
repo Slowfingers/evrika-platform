@@ -5,7 +5,7 @@ const getApiBaseUrl = () => {
     return 'https://evrika-backend.onrender.com/api';
   }
   // Локальная разработка
-  return 'http://localhost:3001/api';
+  return 'http://localhost:10000/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
