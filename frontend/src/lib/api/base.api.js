@@ -1,7 +1,7 @@
 // Определяем API URL на основе окружения
 const getApiBaseUrl = () => {
-  // В production на Render используем фиксированный URL
-  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+  // В production используем backend URL
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
     return 'https://evrika-backend.onrender.com/api';
   }
   // Локальная разработка
