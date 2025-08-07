@@ -94,13 +94,36 @@ function createFullHTMLDocument(lessonData, printContent) {
         }
         .lesson-info {
           background: #f8f9fa;
-          padding: 20px;
+          padding: 15px;
           border-radius: 8px;
-          margin-bottom: 30px;
+          margin-bottom: 20px;
         }
-        .lesson-info h2 {
-          margin-top: 0;
-          color: #2563eb;
+        .goals-section, .description-section {
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid #e5e7eb;
+        }
+        .lesson-stage {
+          margin-bottom: 20px;
+          border-left: 3px solid #2563eb;
+          background: #f9fafb;
+        }
+        .stage-header {
+          background: #2563eb;
+          color: white;
+          padding: 8px 15px;
+          font-weight: bold;
+          font-size: 14px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .stage-time {
+          font-size: 12px;
+          opacity: 0.9;
+        }
+        .stage-cards {
+          padding: 0;
         }
         .info-grid {
           display: grid;
@@ -124,38 +147,46 @@ function createFullHTMLDocument(lessonData, printContent) {
           margin-top: 30px;
         }
         .technique {
-          border-left: 4px solid #2563eb;
-          padding: 20px;
-          margin-bottom: 20px;
-          background: #f8f9fa;
-          border-radius: 0 8px 8px 0;
+          padding: 12px 15px;
+          margin: 0;
+          background: white;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        .technique:last-child {
+          border-bottom: none;
         }
         .technique-header {
           display: flex;
-          justify-content: between;
-          align-items: flex-start;
-          margin-bottom: 10px;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 6px;
         }
         .technique-title {
-          font-size: 18px;
-          font-weight: bold;
+          font-size: 14px;
+          font-weight: 600;
           color: #1f2937;
           margin: 0;
         }
         .technique-time {
           color: #6b7280;
-          font-size: 14px;
-          margin-left: auto;
+          font-size: 12px;
+          background: #f3f4f6;
+          padding: 2px 6px;
+          border-radius: 4px;
         }
         .technique-description {
           color: #4b5563;
-          margin: 10px 0;
+          margin: 4px 0;
+          font-size: 13px;
+          line-height: 1.4;
         }
         .technique-content {
-          background: white;
-          padding: 15px;
-          border-radius: 6px;
-          margin-top: 10px;
+          background: #f9fafb;
+          padding: 8px;
+          border-radius: 4px;
+          margin-top: 6px;
+          font-size: 12px;
+          line-height: 1.3;
         }
         .technique-meta {
           display: flex;
@@ -185,17 +216,35 @@ function createFullHTMLDocument(lessonData, printContent) {
         .summary {
           background: #f0f9ff;
           border: 1px solid #0ea5e9;
-          padding: 20px;
-          border-radius: 8px;
-          margin-top: 30px;
+          padding: 12px;
+          border-radius: 6px;
+          margin-top: 20px;
         }
-        .summary h3 {
+        .summary-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 15px;
+        }
+        .summary-item {
+          text-align: center;
+        }
+        .summary-label {
+          display: block;
+          font-size: 11px;
+          color: #6b7280;
+          margin-bottom: 2px;
+        }
+        .summary-value {
+          font-weight: bold;
           color: #0369a1;
-          margin-top: 0;
+          font-size: 14px;
         }
         @media print {
-          body { margin: 0; padding: 15px; }
+          body { margin: 0; padding: 10px; font-size: 12px; }
+          .lesson-stage { break-inside: avoid; }
           .technique { break-inside: avoid; }
+          .header { margin-bottom: 15px; }
+          .lesson-info { margin-bottom: 15px; padding: 10px; }
         }
       </style>
     </head>
@@ -210,7 +259,22 @@ function createFullHTMLDocument(lessonData, printContent) {
  * Создает HTML контент для печати
  */
 function createPrintableContent(lessonData) {
-  const { subject, topic, grade, description, cards, totalTime } = lessonData;
+  const { subject, topic, grade, description, goals, lessonStages, totalTime } = lessonData;
+  
+  // Подсчитываем общее количество карточек и время
+  let totalCards = 0;
+  let calculatedTotalTime = 0;
+  
+  if (lessonStages) {
+    Object.values(lessonStages).forEach(stage => {
+      if (stage.cards) {
+        totalCards += stage.cards.length;
+        calculatedTotalTime += stage.totalTime || 0;
+      }
+    });
+  }
+  
+  const finalTotalTime = totalTime || calculatedTotalTime;
   
   return `
     <div class="header">
@@ -219,7 +283,6 @@ function createPrintableContent(lessonData) {
     </div>
 
     <div class="lesson-info">
-      <h2>Информация об уроке</h2>
       <div class="info-grid">
         <div class="info-item">
           <span class="info-label">Предмет:</span>
@@ -235,31 +298,136 @@ function createPrintableContent(lessonData) {
         </div>
         <div class="info-item">
           <span class="info-label">Общее время:</span>
-          <span class="info-value">${totalTime} минут</span>
+          <span class="info-value">${finalTotalTime} мин</span>
         </div>
       </div>
+      
+      ${goals ? `
+        <div class="goals-section">
+          <span class="info-label">Цели урока:</span>
+          <div class="info-value">${goals.replace(/\n/g, '<br>')}</div>
+        </div>
+      ` : ''}
+      
       ${description ? `
-        <div class="info-item" style="margin-top: 15px;">
+        <div class="description-section">
           <span class="info-label">Описание:</span>
-          <span class="info-value">${description}</span>
+          <div class="info-value">${description.replace(/\n/g, '<br>')}</div>
         </div>
       ` : ''}
     </div>
 
-    ${cards && cards.length > 0 ? `
-      <div class="techniques-section">
-        <h2>Приёмы урока (${cards.length})</h2>
-        ${cards.map((card, index) => createTechniqueHTML(card, index + 1)).join('')}
-      </div>
-
+    ${lessonStages ? createLessonStagesHTML(lessonStages) : ''}
+    
+    ${totalCards > 0 ? `
       <div class="summary">
-        <h3>Сводка урока</h3>
-        <p><strong>Количество приёмов:</strong> ${cards.length}</p>
-        <p><strong>Общее время:</strong> ${totalTime} минут</p>
-        <p><strong>Средняя продолжительность приёма:</strong> ${Math.round(totalTime / cards.length)} минут</p>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="summary-label">Приёмов:</span>
+            <span class="summary-value">${totalCards}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Время:</span>
+            <span class="summary-value">${finalTotalTime} мин</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Средняя длительность:</span>
+            <span class="summary-value">${Math.round(finalTotalTime / totalCards)} мин</span>
+          </div>
+        </div>
       </div>
-    ` : '<p style="text-align: center; color: #6b7280; margin: 40px 0;">Приёмы не добавлены</p>'}
+    ` : ''}
   `;
+}
+
+/**
+ * Создает HTML для этапов урока
+ */
+function createLessonStagesHTML(lessonStages) {
+  const stageNames = {
+    'начало-урока': 'Начало урока',
+    'объяснение-нового-материала': 'Объяснение нового материала', 
+    'закрепление': 'Закрепление',
+    'конец-урока': 'Конец урока'
+  };
+  
+  let html = '';
+  
+  Object.entries(lessonStages).forEach(([stageKey, stageData]) => {
+    if (stageData.cards && stageData.cards.length > 0) {
+      const stageName = stageNames[stageKey] || stageKey;
+      const stageTime = stageData.totalTime || 0;
+      
+      html += `
+        <div class="lesson-stage">
+          <div class="stage-header">
+            <span>${stageName}</span>
+            <span class="stage-time">${stageTime} мин</span>
+          </div>
+          <div class="stage-cards">
+            ${stageData.cards.map((card, index) => createCompactTechniqueHTML(card, index + 1)).join('')}
+          </div>
+        </div>
+      `;
+    }
+  });
+  
+  return html;
+}
+
+/**
+ * Создает компактный HTML для карточки в этапе урока
+ */
+function createCompactTechniqueHTML(card, index) {
+  try {
+    const timeMinutes = card.timeMinutes || card.time_minutes || 0;
+    
+    // Безопасная обработка метаданных
+    const stagesText = (card.stageIds && Array.isArray(card.stageIds)) ? getStageNames(card.stageIds) : '';
+    const typesText = (card.typeIds && Array.isArray(card.typeIds)) ? getTypeNames(card.typeIds) : '';
+    const skillsText = (card.skillIds && Array.isArray(card.skillIds)) ? getSkillNames(card.skillIds) : '';
+    
+    let ageGroupsText = '';
+    if (card.ageGroups) {
+      if (Array.isArray(card.ageGroups)) {
+        ageGroupsText = getAgeGroupNames(card.ageGroups);
+      } else if (typeof card.ageGroups === 'string') {
+        ageGroupsText = card.ageGroups;
+      }
+    }
+
+    return `
+      <div class="technique">
+        <div class="technique-header">
+          <h4 class="technique-title">${card.title || 'Без названия'}</h4>
+          <span class="technique-time">${formatTimeDisplay(timeMinutes)}</span>
+        </div>
+        
+        ${card.description ? `
+          <p class="technique-description">${card.description}</p>
+        ` : ''}
+        
+        ${card.content ? `
+          <div class="technique-content">
+            ${card.content.replace(/\n/g, '<br>')}
+          </div>
+        ` : ''}
+
+        ${(ageGroupsText || stagesText || typesText || skillsText) ? `
+          <div class="technique-meta">
+            ${ageGroupsText ? `<span class="meta-tag age-group">${ageGroupsText}</span>` : ''}
+            ${stagesText ? `<span class="meta-tag stage">${stagesText}</span>` : ''}
+            ${typesText ? `<span class="meta-tag type">${typesText}</span>` : ''}
+            ${skillsText ? `<span class="meta-tag skill">${skillsText}</span>` : ''}
+          </div>
+        ` : ''}
+      </div>
+    `;
+    
+  } catch (error) {
+    console.error(`📄 PDF Export: Error processing card ${index}:`, error);
+    return `<div class="technique"><p>Ошибка при обработке карточки ${index}: ${error.message}</p></div>`;
+  }
 }
 
 /**
