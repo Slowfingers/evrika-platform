@@ -1,6 +1,9 @@
 import { CardsApi } from '$lib/api/cards.api.js';
 import { error } from '@sveltejs/kit';
 
+// Отключаем SSR чтобы избежать CORS проблем на сервере
+export const ssr = false;
+
 export async function load({ params, fetch }) {
   try {
     const cardsApi = new CardsApi(fetch);
