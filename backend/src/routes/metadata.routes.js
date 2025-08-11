@@ -4,35 +4,31 @@ const DatabaseService = require('../services/database.service');
 const router = express.Router();
 
 // Получить возрастные группы
-router.get('/age-groups', (req, res) => {
-  const db = DatabaseService.getDb();
-  
-  db.all('SELECT * FROM age_groups ORDER BY id', (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.json({
-        success: true,
-        data: rows
-      });
-    }
-  });
+router.get('/age-groups', async (req, res) => {
+  try {
+    const rows = await DatabaseService.execute('SELECT * FROM age_groups ORDER BY id');
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('❌ Ошибка получения возрастных групп:', error.message);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Получить навыки
-router.get('/skills', (req, res) => {
-  const db = DatabaseService.getDb();
-  
-  db.all('SELECT * FROM skills ORDER BY id', (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.json({
-        success: true,
-        data: rows
-      });
-    }
-  });
+router.get('/skills', async (req, res) => {
+  try {
+    const rows = await DatabaseService.execute('SELECT * FROM skills ORDER BY id');
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('❌ Ошибка получения навыков:', error.message);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Получить предопределенные данные для форм

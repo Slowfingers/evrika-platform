@@ -35,8 +35,7 @@ function convertEnglishToRussianId(englishId, type) {
 class CardService {
   // Получить все карточки
   async getAllCards(filters = {}) {
-    return new Promise((resolve, reject) => {
-      const db = DatabaseService.getDb();
+    try {
       let sql = 'SELECT * FROM cards';
       let params = [];
       let conditions = [];
@@ -83,38 +82,55 @@ class CardService {
 
       // Фильтр по времени выполнения
       if (filters.timeRange) {
-        const timeRange = filters.timeRange;
-        if (timeRange === 'up-to-2') {
-          conditions.push('time_minutes BETWEEN ? AND ?');
-          params.push(0, 2);
-        } else if (timeRange === '3-5') {
-          conditions.push('time_minutes BETWEEN ? AND ?');
-          params.push(3, 5);
-        } else if (timeRange === '5-10') {
-          conditions.push('time_minutes BETWEEN ? AND ?');
-          params.push(5, 10);
-        } else if (timeRange === '15-20') {
-          conditions.push('time_minutes BETWEEN ? AND ?');
-          params.push(15, 20);
-        } else if (timeRange === '25-30') {
-          conditions.push('time_minutes BETWEEN ? AND ?');
-          params.push(25, 30);
-        } else if (timeRange === 'full-lesson') {
-          conditions.push('time_minutes BETWEEN ? AND ?');
-          params.push(40, 50);
+        let timeCondition = '';
+        switch (filters.timeRange) {
+          case '1-5':
+            timeCondition = 'time_minutes >= 1 AND time_minutes <= 5';
+            break;
+          case '6-10':
+            timeCondition = 'time_minutes >= 6 AND time_minutes <= 10';
+            break;
+          case '11-15':
+            timeCondition = 'time_minutes >= 11 AND time_minutes <= 15';
+            break;
+          case '16-20':
+            timeCondition = 'time_minutes >= 16 AND time_minutes <= 20';
+            break;
+          case '21+':
+            timeCondition = 'time_minutes >= 21';
+            break;
+        }
+        if (timeCondition) {
+          conditions.push(timeCondition);
         }
       }
 
-      // Поиск по названию
+      // Фильтр по поиску
       if (filters.search) {
-        conditions.push(`(title LIKE ? OR description LIKE ?)`);
-        params.push(`%${filters.search}%`, `%${filters.search}%`);
+        conditions.push('(title LIKE ? OR description LIKE ? OR content LIKE ?)');
+        const searchTerm = `%${filters.search}%`;
+        params.push(searchTerm, searchTerm, searchTerm);
       }
 
+      // Обратная совместимость с одиночными фильтрами
+      if (filters.ageGroupId) {
+        const russianId = convertEnglishToRussianId(filters.ageGroupId, 'ageGroups');
+        conditions.push('age_groups LIKE ?');
+        params.push(`%"${russianId}"%`);
+      }
+
+      if (filters.skillId) {
+        const russianId = convertEnglishToRussianId(filters.skillId, 'skills');
+        conditions.push('skills LIKE ?');
+        params.push(`%"${russianId}"%`);
+      }
+
+      // Добавляем условия к запросу
       if (conditions.length > 0) {
         sql += ' WHERE ' + conditions.join(' AND ');
       }
 
+      // Сортировка
       sql += ' ORDER BY created_at DESC';
 
       // Пагинация
@@ -128,22 +144,21 @@ class CardService {
         }
       }
 
-      db.all(sql, params, (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          const cards = rows.map(row => ({
-            ...row,
-            age_groups: JSON.parse(row.age_groups || '[]'),
-            skills: JSON.parse(row.skills || '[]'),
-            stages: JSON.parse(row.stages || '[]'),
-            types: JSON.parse(row.types || '[]'),
-            aims: JSON.parse(row.aims || '[]')
-          }));
-          resolve(cards);
-        }
-      });
-    });
+      const rows = await DatabaseService.execute(sql, params);
+      const cards = rows.map(row => ({
+        ...row,
+        age_groups: JSON.parse(row.age_groups || '[]'),
+        skills: JSON.parse(row.skills || '[]'),
+        stages: JSON.parse(row.stages || '[]'),
+        types: JSON.parse(row.types || '[]'),
+        aims: JSON.parse(row.aims || '[]')
+      }));
+      
+      return cards;
+    } catch (error) {
+      console.error('❌ Ошибка получения карточек:', error.message);
+      throw error;
+    }
   }
 
   // Получить карточку по ID
