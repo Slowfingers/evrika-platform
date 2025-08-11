@@ -39,10 +39,11 @@ class CardService {
       let sql = 'SELECT * FROM cards';
       let params = [];
       let conditions = [];
+      let paramIndex = 1;
 
       // Фильтр по возрастным группам
       if (filters.ageGroupIds && filters.ageGroupIds.length > 0) {
-        const ageGroupConditions = filters.ageGroupIds.map(() => 'age_groups LIKE ?').join(' OR ');
+        const ageGroupConditions = filters.ageGroupIds.map(() => `age_groups LIKE $${paramIndex++}`).join(' OR ');
         conditions.push(`(${ageGroupConditions})`);
         filters.ageGroupIds.forEach(id => {
           const russianId = convertEnglishToRussianId(id, 'ageGroups');
@@ -52,7 +53,7 @@ class CardService {
 
       // Фильтр по навыкам
       if (filters.skillIds && filters.skillIds.length > 0) {
-        const skillConditions = filters.skillIds.map(() => 'skills LIKE ?').join(' OR ');
+        const skillConditions = filters.skillIds.map(() => `skills LIKE $${paramIndex++}`).join(' OR ');
         conditions.push(`(${skillConditions})`);
         filters.skillIds.forEach(id => {
           const russianId = convertEnglishToRussianId(id, 'skills');
@@ -62,7 +63,7 @@ class CardService {
 
       // Фильтр по этапам урока
       if (filters.stageIds && filters.stageIds.length > 0) {
-        const stageConditions = filters.stageIds.map(() => 'stages LIKE ?').join(' OR ');
+        const stageConditions = filters.stageIds.map(() => `stages LIKE $${paramIndex++}`).join(' OR ');
         conditions.push(`(${stageConditions})`);
         filters.stageIds.forEach(id => {
           const russianId = convertEnglishToRussianId(id, 'stages');
@@ -72,7 +73,7 @@ class CardService {
 
       // Фильтр по типам работы
       if (filters.typeIds && filters.typeIds.length > 0) {
-        const typeConditions = filters.typeIds.map(() => 'types LIKE ?').join(' OR ');
+        const typeConditions = filters.typeIds.map(() => `types LIKE $${paramIndex++}`).join(' OR ');
         conditions.push(`(${typeConditions})`);
         filters.typeIds.forEach(id => {
           const russianId = convertEnglishToRussianId(id, 'types');
@@ -107,21 +108,22 @@ class CardService {
 
       // Фильтр по поиску
       if (filters.search) {
-        conditions.push('(title LIKE ? OR description LIKE ? OR content LIKE ?)');
+        conditions.push(`(title LIKE $${paramIndex} OR description LIKE $${paramIndex + 1} OR content LIKE $${paramIndex + 2})`);
         const searchTerm = `%${filters.search}%`;
         params.push(searchTerm, searchTerm, searchTerm);
+        paramIndex += 3;
       }
 
       // Обратная совместимость с одиночными фильтрами
       if (filters.ageGroupId) {
         const russianId = convertEnglishToRussianId(filters.ageGroupId, 'ageGroups');
-        conditions.push('age_groups LIKE ?');
+        conditions.push(`age_groups LIKE $${paramIndex++}`);
         params.push(`%"${russianId}"%`);
       }
 
       if (filters.skillId) {
         const russianId = convertEnglishToRussianId(filters.skillId, 'skills');
-        conditions.push('skills LIKE ?');
+        conditions.push(`skills LIKE $${paramIndex++}`);
         params.push(`%"${russianId}"%`);
       }
 
@@ -135,11 +137,11 @@ class CardService {
 
       // Пагинация
       if (filters.limit) {
-        sql += ' LIMIT ?';
+        sql += ` LIMIT $${paramIndex++}`;
         params.push(parseInt(filters.limit));
         
         if (filters.offset) {
-          sql += ' OFFSET ?';
+          sql += ` OFFSET $${paramIndex++}`;
           params.push(parseInt(filters.offset));
         }
       }
@@ -306,15 +308,21 @@ class CardService {
 
       // Применяем те же фильтры, что и в getAllCards
       if (filters.ageGroupIds && filters.ageGroupIds.length > 0) {
-        conditions.push(`age_groups LIKE '%' || $${paramIndex} || '%'`);
-        params.push(...filters.ageGroupIds);
-        paramIndex += filters.ageGroupIds.length;
+        const ageGroupConditions = filters.ageGroupIds.map(() => `age_groups LIKE $${paramIndex++}`).join(' OR ');
+        conditions.push(`(${ageGroupConditions})`);
+        filters.ageGroupIds.forEach(id => {
+          const russianId = convertEnglishToRussianId(id, 'ageGroups');
+          params.push(`%"${russianId}"%`);
+        });
       }
 
       if (filters.skillIds && filters.skillIds.length > 0) {
-        conditions.push(`skills LIKE '%' || $${paramIndex} || '%'`);
-        params.push(...filters.skillIds);
-        paramIndex += filters.skillIds.length;
+        const skillConditions = filters.skillIds.map(() => `skills LIKE $${paramIndex++}`).join(' OR ');
+        conditions.push(`(${skillConditions})`);
+        filters.skillIds.forEach(id => {
+          const russianId = convertEnglishToRussianId(id, 'skills');
+          params.push(`%"${russianId}"%`);
+        });
       }
 
       if (filters.search) {
