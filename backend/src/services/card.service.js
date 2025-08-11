@@ -163,34 +163,30 @@ class CardService {
 
   // Получить карточку по ID
   async getCardById(id) {
-    return new Promise((resolve, reject) => {
-      const db = DatabaseService.getDb();
+    try {
+      const row = await DatabaseService.get('SELECT * FROM cards WHERE id = $1', [id]);
       
-      db.get('SELECT * FROM cards WHERE id = ?', [id], (err, row) => {
-        if (err) {
-          reject(err);
-        } else if (!row) {
-          resolve(null);
-        } else {
-          const card = {
-            ...row,
-            age_groups: JSON.parse(row.age_groups || '[]'),
-            skills: JSON.parse(row.skills || '[]'),
-            stages: JSON.parse(row.stages || '[]'),
-            types: JSON.parse(row.types || '[]'),
-            aims: JSON.parse(row.aims || '[]')
-          };
-          resolve(card);
-        }
-      });
-    });
+      if (!row) {
+        return null;
+      }
+
+      const card = {
+        ...row,
+        age_groups: JSON.parse(row.age_groups || '[]'),
+        skills: JSON.parse(row.skills || '[]'),
+        stages: JSON.parse(row.stages || '[]'),
+        types: JSON.parse(row.types || '[]'),
+        aims: JSON.parse(row.aims || '[]')
+      };
+      return card;
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Создать карточку
   async createCard(cardData) {
-    return new Promise((resolve, reject) => {
-      const db = DatabaseService.getDb();
-      
+    try {
       const {
         title,
         description,
@@ -204,9 +200,9 @@ class CardService {
         types = []
       } = cardData;
 
-      db.run(
+      const cardId = await DatabaseService.insert(
         `INSERT INTO cards (title, description, content, time_minutes, file_url, views, age_groups, skills, stages, types)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [
           title,
           description,
@@ -218,23 +214,18 @@ class CardService {
           JSON.stringify(skills),
           JSON.stringify(stages),
           JSON.stringify(types)
-        ],
-        function(err) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({ id: this.lastID, ...cardData });
-          }
-        }
+        ]
       );
-    });
+
+      return { id: cardId, ...cardData };
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Обновить карточку
   async updateCard(id, cardData) {
-    return new Promise((resolve, reject) => {
-      const db = DatabaseService.getDb();
-      
+    try {
       const {
         title,
         description,
@@ -248,13 +239,13 @@ class CardService {
         types = []
       } = cardData;
 
-      db.run(
+      const result = await DatabaseService.run(
         `UPDATE cards 
-         SET title = ?, description = ?, content = ?, time_minutes = ?, 
-             file_url = ?, views = ?,
-             age_groups = ?, skills = ?, stages = ?, types = ?,
+         SET title = $1, description = $2, content = $3, time_minutes = $4, 
+             file_url = $5, views = $6,
+             age_groups = $7, skills = $8, stages = $9, types = $10,
              updated_at = CURRENT_TIMESTAMP
-         WHERE id = ?`,
+         WHERE id = $11`,
         [
           title,
           description,
@@ -267,88 +258,80 @@ class CardService {
           JSON.stringify(stages),
           JSON.stringify(types),
           id
-        ],
-        function(err) {
-          if (err) {
-            reject(err);
-          } else if (this.changes === 0) {
-            reject(new Error('Карточка не найдена'));
-          } else {
-            resolve({ id: parseInt(id), ...cardData });
-          }
-        }
+        ]
       );
-    });
+
+      if (result.changes === 0) {
+        throw new Error('Карточка не найдена');
+      }
+
+      return { id: parseInt(id), ...cardData };
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Удалить карточку
   async deleteCard(id) {
-    return new Promise((resolve, reject) => {
-      const db = DatabaseService.getDb();
+    try {
+      const result = await DatabaseService.run('DELETE FROM cards WHERE id = $1', [id]);
       
-      db.run('DELETE FROM cards WHERE id = ?', [id], function(err) {
-        if (err) {
-          reject(err);
-        } else if (this.changes === 0) {
-          reject(new Error('Карточка не найдена'));
-        } else {
-          resolve({ success: true });
-        }
-      });
-    });
+      if (result.changes === 0) {
+        throw new Error('Карточка не найдена');
+      }
+
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Увеличить счетчик просмотров
   async incrementViews(id) {
-    return new Promise((resolve, reject) => {
-      const db = DatabaseService.getDb();
-      
-      db.run('UPDATE cards SET views = views + 1 WHERE id = ?', [id], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ success: true });
-        }
-      });
-    });
+    try {
+      await DatabaseService.run('UPDATE cards SET views = views + 1 WHERE id = $1', [id]);
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Получить количество карточек
   async getCardsCount(filters = {}) {
-    return new Promise((resolve, reject) => {
-      const db = DatabaseService.getDb();
+    try {
       let sql = 'SELECT COUNT(*) as count FROM cards';
       let params = [];
       let conditions = [];
+      let paramIndex = 1;
 
       // Применяем те же фильтры, что и в getAllCards
       if (filters.ageGroupIds && filters.ageGroupIds.length > 0) {
-        conditions.push(`age_groups LIKE '%' || ? || '%'`);
+        conditions.push(`age_groups LIKE '%' || $${paramIndex} || '%'`);
         params.push(...filters.ageGroupIds);
+        paramIndex += filters.ageGroupIds.length;
       }
 
       if (filters.skillIds && filters.skillIds.length > 0) {
-        conditions.push(`skills LIKE '%' || ? || '%'`);
+        conditions.push(`skills LIKE '%' || $${paramIndex} || '%'`);
         params.push(...filters.skillIds);
+        paramIndex += filters.skillIds.length;
       }
 
       if (filters.search) {
-        conditions.push(`(title LIKE ? OR description LIKE ?)`);
+        conditions.push(`(title LIKE $${paramIndex} OR description LIKE $${paramIndex + 1})`);
         params.push(`%${filters.search}%`, `%${filters.search}%`);
+        paramIndex += 2;
       }
 
       if (conditions.length > 0) {
         sql += ' WHERE ' + conditions.join(' AND ');
       }
 
-      db.get(sql, params, (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row.count);
-        }
-      });
-    });
+      const row = await DatabaseService.get(sql, params);
+      return row.count;
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

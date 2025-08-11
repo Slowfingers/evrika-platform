@@ -44,103 +44,94 @@ class AuthService {
   }
   // Регистрация пользователя
   async register(email, name, password, role = 'user') {
-    return new Promise((resolve, reject) => {
-      const db = DatabaseService.getDb();
+    try {
       const passwordHash = bcrypt.hashSync(password, 10);
 
-      db.run(
-        `INSERT INTO users (email, name, password_hash, role) VALUES (?, ?, ?, ?)`,
-        [email, name, passwordHash, role],
-        function(err) {
-          if (err) {
-            if (err.message.includes('UNIQUE constraint failed')) {
-              reject(new Error('Пользователь с таким email уже существует'));
-            } else {
-              reject(err);
-            }
-          } else {
-            const user = { id: this.lastID, email, name, role };
-            resolve(user);
-          }
-        }
+      const userId = await DatabaseService.insert(
+        `INSERT INTO users (email, name, password_hash, role) VALUES ($1, $2, $3, $4)`,
+        [email, name, passwordHash, role]
       );
-    });
+
+      const user = { id: userId, email, name, role };
+      return user;
+    } catch (error) {
+      if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
+        throw new Error('Пользователь с таким email уже существует');
+      } else {
+        throw error;
+      }
+    }
   }
 
   // Вход пользователя
   async login(email, password) {
-    return new Promise((resolve, reject) => {
+    try {
       // Проверка на блокировку аккаунта
       if (this.isLockedOut(email)) {
         const attempts = this.loginAttempts.get(email);
         const timeLeft = Math.ceil((this.LOCKOUT_TIME - (Date.now() - attempts.lastAttempt)) / 60000);
-        reject(new Error(`Аккаунт заблокирован на ${timeLeft} мин. из-за множественных неудачных попыток входа`));
-        return;
+        throw new Error(`Аккаунт заблокирован на ${timeLeft} мин. из-за множественных неудачных попыток входа`);
       }
 
-      const db = DatabaseService.getDb();
-
-      db.get(
-        `SELECT * FROM users WHERE email = ?`,
-        [email],
-        (err, user) => {
-          if (err) {
-            reject(err);
-          } else if (!user) {
-            this.recordFailedAttempt(email);
-            reject(new Error('Неверные данные для входа'));
-          } else if (!bcrypt.compareSync(password, user.password_hash)) {
-            this.recordFailedAttempt(email);
-            reject(new Error('Неверные данные для входа'));
-          } else {
-            // Сброс неудачных попыток при успешном входе
-            this.resetFailedAttempts(email);
-            
-            const token = jwt.sign(
-              { id: user.id, email: user.email, role: user.role },
-              JWT_SECRET,
-              { expiresIn: '7d' }
-            );
-
-            resolve({
-              user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role
-              },
-              token
-            });
-          }
-        }
+      const user = await DatabaseService.get(
+        `SELECT * FROM users WHERE email = $1`,
+        [email]
       );
-    });
+
+      if (!user) {
+        this.recordFailedAttempt(email);
+        throw new Error('Неверные данные для входа');
+      }
+
+      if (!bcrypt.compareSync(password, user.password_hash)) {
+        this.recordFailedAttempt(email);
+        throw new Error('Неверные данные для входа');
+      }
+
+      // Сброс неудачных попыток при успешном входе
+      this.resetFailedAttempts(email);
+      
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        },
+        token
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Получение пользователя по токену
   async getUserByToken(token) {
-    return new Promise((resolve, reject) => {
-      try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const db = DatabaseService.getDb();
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      
+      const user = await DatabaseService.get(
+        `SELECT id, email, name, role FROM users WHERE id = $1`,
+        [decoded.id]
+      );
 
-        db.get(
-          `SELECT id, email, name, role FROM users WHERE id = ?`,
-          [decoded.id],
-          (err, user) => {
-            if (err) {
-              reject(err);
-            } else if (!user) {
-              reject(new Error('Пользователь не найден'));
-            } else {
-              resolve(user);
-            }
-          }
-        );
-      } catch (error) {
-        reject(new Error('Недействительный токен'));
+      if (!user) {
+        throw new Error('Пользователь не найден');
       }
-    });
+
+      return user;
+    } catch (error) {
+      if (error.message === 'Пользователь не найден') {
+        throw error;
+      }
+      throw new Error('Недействительный токен');
+    }
   }
 
   // Middleware для проверки аутентификации
