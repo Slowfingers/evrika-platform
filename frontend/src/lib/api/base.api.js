@@ -8,6 +8,8 @@ const getApiBaseUrl = () => {
   return 'http://localhost:10000/api';
 };
 
+// Cache-busting comment for PostgreSQL-only production - 2025-01-11
+
 const API_BASE_URL = getApiBaseUrl();
 
 export class BaseApi {
