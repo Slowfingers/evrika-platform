@@ -157,11 +157,11 @@
 </svelte:head>
 
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-  <div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
     <!-- Навигация назад -->
-    <div class="mb-6 animate-fade-in">
-      <a href="/" class="inline-flex items-center text-primary-600 hover:text-primary-700 transition-colors duration-200 group">
-        <svg class="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-4 sm:mb-6 animate-fade-in">
+      <a href="/" class="inline-flex items-center text-primary-600 hover:text-primary-700 transition-colors duration-200 group text-sm sm:text-base">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
         Вернуться к каталогу
@@ -171,10 +171,25 @@
     <!-- Основная карточка -->
     <div class="card animate-slide-up">
       <!-- Заголовок и описание -->
-      <div class="p-8 border-b border-secondary-200 bg-gradient-to-r from-primary-50 to-accent-50">
-        <div class="flex items-start justify-between mb-6">
+      <div class="p-4 sm:p-6 lg:p-8 border-b border-secondary-200 bg-gradient-to-r from-primary-50 to-accent-50">
+        <!-- Мобильная версия: заголовок и время в колонку -->
+        <div class="block sm:hidden mb-6">
+          <h1 class="text-2xl sm:text-3xl font-bold mb-3 heading-gradient">{card.title}</h1>
+          <div class="mb-4">
+            <div class="badge badge-primary text-sm px-3 py-2 inline-flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              {formatTimeDisplay(card.time_minutes)}
+            </div>
+          </div>
+          <p class="text-base text-secondary-700 leading-relaxed">{card.description}</p>
+        </div>
+        
+        <!-- Десктопная версия: заголовок и время в строку -->
+        <div class="hidden sm:flex items-start justify-between mb-6">
           <div class="flex-1">
-            <h1 class="text-4xl font-bold mb-4 heading-gradient">{card.title}</h1>
+            <h1 class="text-3xl lg:text-4xl font-bold mb-4 heading-gradient">{card.title}</h1>
             <p class="text-lg text-secondary-700 leading-relaxed">{card.description}</p>
           </div>
           <div class="ml-6 flex-shrink-0">
@@ -189,50 +204,50 @@
       </div>
 
       <!-- Метаданные -->
-      <div class="p-8 bg-secondary-50 border-b border-secondary-200">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="p-4 sm:p-6 lg:p-8 bg-secondary-50 border-b border-secondary-200">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <!-- Возрастные группы -->
-          <div class="bg-white p-6 rounded-xl shadow-sm border border-secondary-100">
-            <h3 class="font-semibold text-secondary-800 mb-3 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-secondary-100">
+            <h3 class="font-semibold text-secondary-800 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-primary-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M9 20H4v-2a3 3 0 015.196-2.121M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
               </svg>
               Возрастные группы
             </h3>
-            <p class="text-secondary-600">{getAgeGroupNames(card.age_groups)}</p>
+            <p class="text-secondary-600 text-sm sm:text-base">{getAgeGroupNames(card.age_groups)}</p>
           </div>
 
           <!-- Развиваемые навыки -->
-          <div class="bg-white p-6 rounded-xl shadow-sm border border-secondary-100">
-            <h3 class="font-semibold text-secondary-800 mb-3 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-secondary-100">
+            <h3 class="font-semibold text-secondary-800 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-accent-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
               </svg>
               Развиваемые навыки
             </h3>
-            <p class="text-secondary-600">{getSkillNames(card.skills)}</p>
+            <p class="text-secondary-600 text-sm sm:text-base">{getSkillNames(card.skills)}</p>
           </div>
 
           <!-- Этапы урока -->
-          <div class="bg-white p-6 rounded-xl shadow-sm border border-secondary-100">
-            <h3 class="font-semibold text-secondary-800 mb-3 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-secondary-100">
+            <h3 class="font-semibold text-secondary-800 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
               </svg>
               Этапы урока
             </h3>
-            <p class="text-secondary-600">{getStageNames(card.stages)}</p>
+            <p class="text-secondary-600 text-sm sm:text-base">{getStageNames(card.stages)}</p>
           </div>
 
           <!-- Типы работы -->
-          <div class="bg-white p-6 rounded-xl shadow-sm border border-secondary-100">
-            <h3 class="font-semibold text-secondary-800 mb-3 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M9 20H4v-2a3 3 0 015.196-2.121M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-secondary-100">
+            <h3 class="font-semibold text-secondary-800 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M9 20H4v-2a3 3 0 515.196-2.121M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
               </svg>
               Типы работы
             </h3>
-            <p class="text-secondary-600">{getTypeNames(card.types)}</p>
+            <p class="text-secondary-600 text-sm sm:text-base">{getTypeNames(card.types)}</p>
           </div>
 
 
@@ -240,9 +255,9 @@
       </div>
       
       <!-- Основное содержимое приёма -->
-      <div class="p-8">
-        <h2 class="text-2xl font-bold mb-6 text-secondary-900 pb-3 border-b border-secondary-200 flex items-center">
-          <svg class="w-6 h-6 mr-3 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="p-4 sm:p-6 lg:p-8">
+        <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-secondary-900 pb-3 border-b border-secondary-200 flex items-center">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-primary-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
           Содержание приёма
