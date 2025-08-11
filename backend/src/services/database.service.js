@@ -145,54 +145,6 @@ class DatabaseService {
     }
   }
 
-
-
-  async seedDataPostgreSQL(adminPassword) {
-    try {
-      // Сначала пытаемся создать админа
-      await this.db.query(
-        `INSERT INTO users (email, name, password_hash, role) 
-         VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING`,
-        ['admin@evrika.com', 'Администратор', adminPassword, 'admin']
-      );
-
-      // Добавляем метаданные - возрастные группы
-      const ageGroups = [
-        { id: 'primary', name: 'Начальные классы (1-4)', description: 'Учащиеся 1-4 классов' },
-        { id: 'secondary', name: 'Старшие классы (5-11)', description: 'Учащиеся 5-11 классов' }
-      ];
-
-      for (const group of ageGroups) {
-        await this.db.query(
-          `INSERT INTO age_groups (id, name, description) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`,
-          [group.id, group.name, group.description]
-        );
-      }
-
-      // Добавляем метаданные - навыки
-      const skills = [
-        { id: 'critical', name: 'Критическое мышление', description: 'Развитие критического мышления' },
-        { id: 'teamwork', name: 'Командная работа', description: 'Навыки работы в команде' },
-        { id: 'reflection', name: 'Рефлексия', description: 'Навыки самоанализа и рефлексии' },
-        { id: 'creative', name: 'Креативное мышление', description: 'Развитие творческих способностей' },
-        { id: 'systematization', name: 'Систематизация материала', description: 'Навыки структурирования информации' },
-        { id: 'communication', name: 'Коммуникативные', description: 'Развитие коммуникативных навыков' }
-      ];
-
-      for (const skill of skills) {
-        await this.db.query(
-          `INSERT INTO skills (id, name, description) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`,
-          [skill.id, skill.name, skill.description]
-        );
-      }
-
-      console.log('✅ Данные PostgreSQL инициализированы');
-    } catch (error) {
-      console.error('❌ Ошибка инициализации данных PostgreSQL:', error.message);
-      throw error;
-    }
-  }
-
   // Методы для работы с базой данных (PostgreSQL только)
   async execute(sql, params = []) {
     const result = await this.db.query(sql, params);
