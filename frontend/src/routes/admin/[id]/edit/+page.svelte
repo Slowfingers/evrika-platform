@@ -21,7 +21,7 @@
         'teamwork': 'командная-работа',
         'reflection': 'рефлексия',
         'creative': 'креативное-мышление',
-        'systematization': 'систематизация',
+        'systematization': 'систематизация-материала',
         'communication': 'коммуникация'
       },
       stages: {
@@ -57,7 +57,7 @@
         'командная-работа': 'teamwork',
         'рефлексия': 'reflection',
         'креативное-мышление': 'creative',
-        'систематизация': 'systematization',
+        'систематизация-материала': 'systematization',
         'коммуникация': 'communication'
       },
       stages: {

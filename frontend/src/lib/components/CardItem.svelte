@@ -1,6 +1,6 @@
 <script>
   import { formatTimeDisplay } from '$lib/utils/time-intervals.js';
-  import { getAgeGroupNames, getSkillNames, getStageNames, getTypeNames } from '$lib/utils/localization.js';
+  import { getAgeGroupNames, getSkillNames, getStageNames, getTypeNames, getSkillName } from '$lib/utils/localization.js';
   
   export let card;
 </script>
@@ -75,7 +75,7 @@
     <div class="flex flex-wrap gap-2">
       {#each (card.skills || []).slice(0, 2) as skill}
         <span class="badge badge-secondary text-xs">
-          {skill}
+          {getSkillName(skill)}
         </span>
       {/each}
       {#if card.skills?.length > 2}
